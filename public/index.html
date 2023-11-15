@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Note-taking App</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #3498db 0%, #9b59b6 100%);
+            background-size: 400% 400%;
+            animation: gradientAnimation 15s infinite alternate;
+            color: #ecf0f1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        h1 {
+            color: #ecf0f1;
+            text-align: center;
+            margin-top: 40px;
+            font-size: 3rem;
+            animation: fadeInDown 1s ease-out;
+        }
+        form {
+            margin: 20px;
+            text-align: center;
+            animation: fadeInUp 1s ease-out;
+        }
+        label {
+            display: block;
+            margin: 10px 0;
+            font-size: 1.2rem;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #3498db;
+            border-radius: 5px;
+            color: #3498db;
+            margin-bottom: 15px;
+            transition: border-color 0.3s ease;
+        }
+        input:focus, textarea:focus {
+            border-color: #2980b9;
+        }
+        button {
+            background-color: #3498db;
+            color: #ecf0f1;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            animation: fadeIn 1s ease-out;
+        }
+        li {
+            border: 1px solid #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #34495e;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            animation: fadeInUp 1s ease-out;
+            opacity: 0;
+        }
+        li:hover {
+            transform: scale(1.03);
+        }
+
+        /* Popup styles */
+        #popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px;
+            background-color: #3498db;
+            color: #ecf0f1;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            display: none;
+            animation: fadeInPopup 0.5s ease-out;
+        }
+
+        @keyframes gradientAnimation {
+            0% {
+                background-position: 0% 50%;
+            }
+            100% {
+                background-position: 100% 50%;
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeInLi {
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeInPopup {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body onload="showPopup()">
+    <h1>Ultimate Note-taking App</h1>
+
+    <!-- Popup -->
+    <div id="popup">
+        <h2>Update Log (Beta Release)</h2>
+        <p>- Added cool animations</p>
+        <p>- Improved UI and background</p>
+        <p>- Bug fixes and performance improvements</p>
+        <p>Stay tuned for more updates!</p>
+        <button onclick="closePopup()">Close</button>
+    </div>
+
+    <form id="noteForm">
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" placeholder="Enter a title" required>
+        <label for="content">Content:</label>
+        <textarea id="content" name="content" placeholder="Write your note here" required></textarea>
+        <button type="submit">Add Note</button>
+    </form>
+
+    <ul id="notesList"></ul>
+
+    <script>
+        const noteForm = document.getElementById('noteForm');
+        const notesList = document.getElementById('notesList');
+        const popup = document.getElementById('popup');
+
+        noteForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const title = document.getElementById('title').value;
+            const content = document.getElementById('content').value;
+
+            fetch('/notes', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `title=${title}&content=${content}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                displayNotes();
+                noteForm.reset();
+                showPopup();
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        function displayNotes() {
+            fetch('/notes')
+            .then(response => response.json())
+            .then(data => {
+                notesList.innerHTML = '';
+                data.forEach(note => {
+                    const li = document.createElement('li');
+                    li.textContent = `Title: ${note.title}, Content: ${note.content}`;
+                    notesList.appendChild(li);
+
+                    // Trigger fade-in animation for each note
+                    setTimeout(() => {
+                        li.style.animation = 'fadeInLi 0.5s ease-out';
+                        li.style.opacity = 1;
+                    }, 100);
+                });
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function showPopup() {
+            popup.style.display = 'block';
+        }
+
+        function closePopup() {
+            popup.style.display = 'none';
+        }
+
+        // Initial load
+        displayNotes();
+    </script>
+</body>
+</html>
